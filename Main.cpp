@@ -18,6 +18,10 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include "Console.h"
+
+Console con;
+
 struct MemoryInfo {
     void* address;
     int intValue;
@@ -48,13 +52,17 @@ DWORD GetProcessIdByName(const std::wstring& processName) {
 bool WriteToProcessMemory(HANDLE hProcess, void* address, BYTE value) {
     return WriteProcessMemory(hProcess, address, &value, sizeof(value), nullptr) != 0;
 }
+HANDLE hProcess;
+DWORD processID;
 std::vector<MemoryInfo> memoryList;
+std::vector<MemoryInfo> memoryListSearched;
+
 void Run() {
     std::wstring targetExeName = L"Ovlauncher.exe";
-    DWORD processID = GetProcessIdByName(targetExeName);
+    processID = GetProcessIdByName(targetExeName);
 
     if (processID != 0) {
-        HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, processID);
+        hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, processID);
 
         if (hProcess != NULL) {
             SYSTEM_INFO sysInfo;
@@ -93,7 +101,13 @@ void Run() {
                     std::cerr << "Failed to query memory. Error code: " << GetLastError() << std::endl;
                     break;
                 }
+
+                
             }
+
+            
+
+            
 
             delete[] buffer;
             CloseHandle(hProcess);
@@ -105,11 +119,14 @@ void Run() {
     else {
         std::cerr << "Process not found." << std::endl;
     }
-
+    /*
     for (const MemoryInfo& info : memoryList) {
+        
         std::cout << "Memory at address " << reinterpret_cast<void*>(info.address)
             << " has integer value " << info.intValue << std::endl;
+
     }
+    */
 }
 
 
@@ -142,6 +159,7 @@ int main() {
 	ImGui_ImplOpenGL3_Init("#version 330");
 
     int search = 696948796;
+    bool allow_Search = true;
     while (!glfwWindowShouldClose(window))
     {
         glClearColor(0.00f, 0.00f, 0.00f, 1.0f);
@@ -176,18 +194,28 @@ int main() {
 
         ImGui::Begin("List");
         ImGui::Text(std::to_string(memoryList.size()).c_str());
-        ImGui::InputInt("Search", &search);
-
-        for (int i = 0; i < memoryList.size(); ++i) {
-            if (true) {
-                if (memoryList[i].intValue == search) {
-                    std::stringstream addressStream;
-                    addressStream << memoryList[i].address;
-                    std::string addressString = "(" + std::to_string(memoryList[i].intValue) + ") at " + addressStream.str();
-                    if (ImGui::Button(addressString.c_str())) {
+        ImGui::InputInt("Num-Check", &search);
+        if (ImGui::Button("Search")) {
+            memoryListSearched.clear();
+            for (int i = 0; i < memoryList.size(); ++i) {
+                if (true) {
+                    if (memoryList[i].intValue == search) {
+                        memoryListSearched.push_back(memoryList[i]);
                     }
                 }
             }
+        }
+
+        hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processID);
+        for (int i = 0; i < memoryListSearched.size(); ++i) {
+            std::stringstream addressStream;
+            addressStream << memoryListSearched[i].address;
+            std::string addressString = "[" + std::to_string(memoryListSearched[i].intValue) + "] at " + addressStream.str();
+            if (ImGui::Button(addressString.c_str())) {
+            }
+            int newValue = 5;
+            BOOL writeResult = WriteProcessMemory(hProcess, memoryListSearched[i].address, &newValue, sizeof(newValue), NULL);
+
         }
 
         
