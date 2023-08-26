@@ -20,6 +20,7 @@
 #include <sstream>
 #include "Console.h"
 #include "Guitheme.h"
+#include<stb/stb_image.h>
 Console con;
 
 struct MemoryInfo {
@@ -106,12 +107,11 @@ int mbusage = 62;
 void Run() {
 
 
-    // Convert std::string to std::wstring using Windows API
+
     int bufferSize = MultiByteToWideChar(CP_UTF8, 0, selectedProcessName.c_str(), -1, nullptr, 0);
-    std::wstring wSelectedProcessName(bufferSize - 1, L'\0'); // Exclude the null-terminator
+    std::wstring wSelectedProcessName(bufferSize - 1, L'\0'); 
     MultiByteToWideChar(CP_UTF8, 0, selectedProcessName.c_str(), -1, &wSelectedProcessName[0], bufferSize);
 
-    // Now you have the selected process name as a std::wstring
     processID = GetProcessIdByName(wSelectedProcessName);
 
     memoryList.clear();
@@ -124,7 +124,7 @@ void Run() {
             GetSystemInfo(&sysInfo);
 
             MEMORY_BASIC_INFORMATION memInfo;
-            SIZE_T bufferSize = mbusage * 1024 * 1024; // 62MB
+            SIZE_T bufferSize = mbusage * 1024 * 1024;
             BYTE* buffer = new BYTE[bufferSize];
 
             BYTE* address = reinterpret_cast<BYTE*>(sysInfo.lpMinimumApplicationAddress);
@@ -202,6 +202,18 @@ int main() {
         glfwTerminate();
         return -1;
     }
+
+    //load Icon
+    int wid, hei;
+    int channels;
+    unsigned char* pixels = stbi_load("Assets/mmsicon.png", &wid, &hei, &channels, 4);
+
+    GLFWimage images[1];
+    images[0].width = wid;
+    images[0].height = hei;
+    images[0].pixels = pixels;
+    glfwSetWindowIcon(window, 1, images);
+
     glfwMakeContextCurrent(window);
     glfwSetWindowAttrib(window, GLFW_RESIZABLE, GLFW_FALSE);
     gladLoadGL();
@@ -217,9 +229,8 @@ int main() {
 	ImGui_ImplOpenGL3_Init("#version 330");
     DefaultTheme();
     int search = -1;
-    DefaultTheme;
 
-    int selectedProcessIndex = -1; // Initialize with an invalid index
+    int selectedProcessIndex = -1;
     std::vector<std::string> processNames;
 
     while (!glfwWindowShouldClose(window))
@@ -332,28 +343,23 @@ int main() {
                 ImGui::EndCombo();
             }
 
-            // Update the selected process name based on the index
             if (selectedProcessIndex >= 0 && selectedProcessIndex < processNames.size()) {
                 selectedProcessName = processNames[selectedProcessIndex];
             }
 
-            // Use ImGui::Text to display the selected process name
             ImGui::Text("Selected Process: %s", selectedProcessName.c_str());
         }
 
         ImGui::Text("Usage (MB):");
         ImGui::SameLine();
-        //ImGui::SetNextItemWidth(-1); // Auto-adjust width based on text size
         ImGui::InputInt("## 1", &mbusage);
 
         ImGui::Text("Min:");
         ImGui::SameLine();
-        //ImGui::SetNextItemWidth(-1); // Auto-adjust width based on text size
         ImGui::InputInt("## 2", &min);
 
         ImGui::Text("Max:");
         ImGui::SameLine();
-        //ImGui::SetNextItemWidth(-1); // Auto-adjust width based on text size
         ImGui::InputInt("## 3", &max);
 
         ImGui::End();
