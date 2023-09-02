@@ -295,17 +295,20 @@ int main() {
         hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processID);
         for (int i = 0; i < memoryListSearched.size(); ++i) {
 
-            std::stringstream addressStream;
-            addressStream << memoryListSearched[i].address;
-            std::string addressString = addressStream.str();
-            if (ImGui::Button(addressString.c_str())) {
+            if (i < 10000) {
+                std::stringstream addressStream;
+                addressStream << memoryListSearched[i].address;
+                std::string addressString = addressStream.str();
+                if (ImGui::Button(addressString.c_str())) {
+                }
+
+                ImGui::SameLine();
+                ImGui::InputInt(("Input" + addressStream.str()).c_str(), &memoryListSearched[i].intValue);
+
+                ImGui::SameLine();
+                ImGui::InputInt(("InputAfter" + addressStream.str()).c_str(), &memoryListSearched[i].intValue);
+
             }
-            ImGui::SameLine();
-            ImGui::InputInt(("Input" + addressStream.str()).c_str(), &memoryListSearched[i].intValue);
-
-            ImGui::SameLine();
-            ImGui::InputInt(("InputAfter" + addressStream.str()).c_str(), &memoryListSearched[i].intValue);
-
 
 
         }
